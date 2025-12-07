@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Quiz Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Start Screen -------------------------------------------------------------->
+<div id="start-screen">
+    <h1>Math Quiz Setup</h1>
+
+    <label>Rubric:</label>
+    <select id="rubric">
+        <option value="addition">Addition</option>
+        <option value="subtraction">Subtraction</option>
+        <option value="multiplication">Multiplication</option>
+        <option value="division">Division</option>
+    </select>
+
+    <label>Difficulty:</label>
+    <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+    </select>
+
+    <label>Number of Questions:</label>
+    <input type="number" id="num-questions" value="10" min="1" max="50">
+
+    <label>Time per Question (seconds):</label>
+    <input type="number" id="time-limit" value="15" min="5" max="120">
+
+    <button id="start-btn">Start</button>
+</div>
+
+<!-- Quiz Screen --------------------------------------------------------------->
+<div id="quiz-screen" style="display:none;">
+    <div id="quiz-header">
+        <h2 id="rubric-name"></h2>
+        <div>
+            Question <span id="question-number">1</span>
+        </div>
+        <div id="progress-bar">
+            <div id="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <div id="problem">
+        <h1 id="problem-statement"></h1>
+        <input type="text" id="answer" autocomplete="off">
+    </div>
+
+    <div id="control-bar">
+        <button id="back-btn">Back</button>
+        <button id="quit-btn">Quit</button>
+        <button id="next-btn">Next</button>
+    </div>
+</div>
+
+<!-- Results Screen ------------------------------------------------------------>
+<div id="results-screen" style="display:none;">
+    <h1>Results</h1>
+
+    <div id="score-summary">
+        <h2><span id="correct-answers"></span> / <span id="total-questions"></span> correct</h2>
+        <p>Total Time: <span id="time-elapsed"></span> seconds</p>
+    </div>
+
+    <h3>Detailed Statistics</h3>
+    <div id="question-stats"></div>
+
+    <button onclick="location.reload()">Restart</button>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+Generate a web-game where a student needs to solve series of basic arithmetic problems.
+
+The initial screen shows options allowing to select rubric (addition, subtraction, multiplication, division), difficulty, the number of questions, the time limit per question, and the Start button.
+
+Pressing Start button begins the quiz game where problems are presented one at a time. At the top is the rubric name, question number and a progress bar below it indicating the remaining time to answer the question.  In the middle is the problem statement, e.g. "3 + 5 = " followed by an input textbox. The input textbox should be autofocused and only allow numeric inputs. Hitting "Enter" on the keyboard should record the answer, the elapsed time, and then proceed to the next question.
+At the bottom is the control bar with buttons "Back", "Quit" in the left corner, "Next" in the right corner. "Next" button should record the answer, the elapsed time, and then proceed to the next question.
+
+Upon answering all questions the user should be presented with a Results page showing the summary:
+- How many answers were correct out of total, e.g. "9 / 10" in large font
+- How much time elapsed.
+
+In smaller font below, a detailed statistic in a scrollable section:
+- Question, provided answer (crossed out if wrong), correct answer (if different), time spent answering.
