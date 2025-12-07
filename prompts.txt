@@ -11,3 +11,8 @@ Upon answering all questions the user should be presented with a Results page sh
 
 In smaller font below, a detailed statistic in a scrollable section:
 - Question, provided answer (crossed out if wrong), correct answer (if different), time spent answering.
+
+
+----
+
+On the Results page, make the score stand out (larger, more playful font), show fireworks animation in the background if a perfect score is achieved.

@@ -139,8 +139,10 @@ function showResults() {
 
     const correct = quizData.filter(q => parseFloat(q.userAnswer) == q.correct).length;
 
-    document.getElementById("correct-answers").textContent = correct;
-    document.getElementById("total-questions").textContent = quizData.length;
+    // New playful score display
+    const bigScore = document.getElementById("big-score");
+    bigScore.textContent = `${correct} / ${quizData.length}`;
+
     document.getElementById("time-elapsed").textContent = totalTimeSpent.toFixed(1);
 
     const stats = document.getElementById("question-stats");
@@ -149,16 +151,85 @@ function showResults() {
     quizData.forEach((q, i) => {
         const div = document.createElement("div");
         let ua = q.userAnswer === "" ? "(blank)" : q.userAnswer;
-        const correct = parseFloat(q.userAnswer) == q.correct;
+        const isCorrect = parseFloat(q.userAnswer) == q.correct;
 
         div.innerHTML = `
             <p><strong>Q${i+1}:</strong> ${q.question}
             <br>Answer:
-                <span class="${correct ? 'correct':'wrong'}">${ua}</span>
-                ${!correct ? ` → <strong>${q.correct}</strong>` : ""}
+                <span class="${isCorrect ? 'correct' : 'wrong'}">${ua}</span>
+                ${!isCorrect ? ` → <strong>${q.correct}</strong>` : ""}
             <br><small>Time: ${q.timeSpent}s</small></p>
             <hr>
         `;
         stats.appendChild(div);
     });
+
+    // 🎉 Fireworks for perfect score
+    if (correct === quizData.length) {
+        startFireworks();
+    }
+}
+
+function startFireworks() {
+    const canvas = document.getElementById("fireworks-canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.style.display = "block";
+
+    // Fullscreen canvas
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const fireworks = [];
+    const particlesPerFirework = 60;
+    const gravity = 0.05;
+
+    function spawnFirework() {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height * 0.5;
+        const particles = [];
+
+        for (let i = 0; i < particlesPerFirework; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 5 + 2;
+
+            particles.push({
+                x, y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                alpha: 1
+            });
+        }
+        fireworks.push(particles);
+    }
+
+    function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        fireworks.forEach((particles, i) => {
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += gravity;
+                p.alpha -= 0.02;
+
+                ctx.fillStyle = `rgba(255, 200, 50, ${p.alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Remove finished fireworks
+            if (particles.every(p => p.alpha <= 0)) {
+                fireworks.splice(i, 1);
+            }
+        });
+
+        // Spawn new fireworks randomly
+        if (Math.random() < 0.05) spawnFirework();
+
+        requestAnimationFrame(update);
+    }
+
+    spawnFirework();
+    update();
 }

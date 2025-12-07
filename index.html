@@ -61,11 +61,15 @@
 </div>
 
 <!-- Results Screen ------------------------------------------------------------>
-<div id="results-screen" style="display:none;">
+<div id="results-screen" style="display:none; position: relative;">
+
+    <!-- Fireworks Canvas -->
+    <canvas id="fireworks-canvas"></canvas>
+
     <h1>Results</h1>
 
     <div id="score-summary">
-        <h2><span id="correct-answers"></span> / <span id="total-questions"></span> correct</h2>
+        <h1 id="big-score"></h1>
         <p>Total Time: <span id="time-elapsed"></span> seconds</p>
     </div>
 

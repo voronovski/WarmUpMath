@@ -66,3 +66,21 @@ input, select {
     color: red;
     text-decoration: line-through;
 }
+
+#big-score {
+    font-size: 64px;
+    font-weight: 900;
+    color: #ff4081;
+    font-family: "Comic Sans MS", "Fredoka One", "Baloo", cursive;
+    margin: 0;
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 #f48fb1;
+}
+
+#fireworks-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* allow clicking buttons */
+    display: none; /* only shown on perfect score */
+}
