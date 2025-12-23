@@ -30,6 +30,65 @@ answerInput.addEventListener("keydown", e => {
     if (e.key === "Enter" && answerInput.value != "") nextQuestion();
 });
 
+questionGens = {
+  addition: {
+    a1: function() {
+      // sum <= 10
+      let ans = rand(2, 10);
+      let a = rand(1, ans);
+      let b = ans - a;
+      return [
+        `${a} + ${b} = `,
+        ans
+      ];
+    },
+    a2: function() {
+      // 10 < sum < 18
+      let a = rand(2, 9);
+      let b = rand(11 - a, 9);
+      let ans = a + b;
+      return [
+        `${a} + ${b} = `,
+        ans
+      ];
+    },
+    a3: function() {
+      // large a, small b, sum doesn't cross 10x
+      let a = rand(11, 99);
+      let b = rand(1, 10 - a % 10);
+      let ans = a + b;
+      return [
+        `${a} + ${b} = `,
+        ans
+      ];
+    },
+    a4: function() {
+      // large a, small b, sum crosses 10x
+      let a = rand(2, 9);
+      let b = rand(11 - a, 9);
+      a += rand(1, 8) * 10;
+      let ans = a + b;
+      return [
+        `${a} + ${b} = `,
+        ans
+      ];
+    },
+    a5: function() {
+      // large a, large b, sum of ones doesn't crosses 10x
+      let a_1 = rand(1, 9);
+      let b_1 = rand(1, 10 - a_1);
+      let tens = rand(1, 8);
+      let a = tens * 10 + a_1;
+      let b = rand(1, 9-tens) * 10 + b_1;
+      let ans = a + b;
+      return [
+        `${a} + ${b} = `,
+        ans
+      ];
+    },
+  }
+}
+
 // Start game
 function startQuiz() {
     const rubric = document.getElementById("rubric").value;
@@ -64,6 +123,7 @@ function generateQuestions(rubric, difficulty, count) {
             case "addition":
                 text = `${a} + ${b} =`;
                 ans = a + b;
+
                 break;
             case "subtraction":
                 if (a < b) {
@@ -83,15 +143,18 @@ function generateQuestions(rubric, difficulty, count) {
             case "division":
                 ans = rand(1, 10);
                 b = rand(2, 2);
-                // if (Math.random() > 0.5) {
-                //   let t = ans;
-                //   ans = b;
-                //   b = t;
-                // }
+                if (Math.random() > 0.5) {
+                  let t = ans;
+                  ans = b;
+                  b = t;
+                }
 
                 a = ans * b;
                 text = `${a} ÷ ${b} =`;
                 break;
+            case 'addition_marathon':
+              [text, ans] = questionGens['addition']['a' + (Math.floor(i/5) + 1)]();
+              break;
         }
 
         list.push({
