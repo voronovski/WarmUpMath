@@ -27,7 +27,7 @@ document.getElementById("back-btn").onclick = () => {
 
 // ENTER key submits
 answerInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") nextQuestion();
+    if (e.key === "Enter" && answerInput.value != "") nextQuestion();
 });
 
 // Start game
@@ -55,8 +55,8 @@ function generateQuestions(rubric, difficulty, count) {
     const list = [];
 
     for (let i = 0; i < count; i++) {
-        const a = rand(min, max);
-        const b = rand(min, max);
+        let a = rand(min, max);
+        let b = rand(min, max);
 
         let q = {}, text = "", ans = 0;
 
@@ -66,16 +66,31 @@ function generateQuestions(rubric, difficulty, count) {
                 ans = a + b;
                 break;
             case "subtraction":
+                if (a < b) {
+                  let t = a;
+                  a = b;
+                  b = t;
+                }
                 text = `${a} - ${b} =`;
                 ans = a - b;
                 break;
             case "multiplication":
+                a = rand(3, 4);
+                b = rand(2, 11);
                 text = `${a} × ${b} =`;
                 ans = a * b;
                 break;
             case "division":
+                ans = rand(1, 10);
+                b = rand(2, 2);
+                // if (Math.random() > 0.5) {
+                //   let t = ans;
+                //   ans = b;
+                //   b = t;
+                // }
+
+                a = ans * b;
                 text = `${a} ÷ ${b} =`;
-                ans = (a / b);
                 break;
         }
 
