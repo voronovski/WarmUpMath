@@ -19,6 +19,7 @@
         <option value="multiplication">Multiplication</option>
         <option value="division">Division</option>
         <option value="addition_marathon">Addition Marathon</option>
+        <option value="subtraction_marathon">Subtraction Marathon</option>
     </select>
 
     <label>Difficulty:</label>
@@ -72,9 +73,14 @@
     <div id="score-summary">
         <h1 id="big-score"></h1>
         <p>Total Time: <span id="time-elapsed"></span> seconds</p>
+        <p>Date: <span id="date"></span></p>
     </div>
 
     <h3>Detailed Statistics</h3>
+    <div>
+      <label><input type="checkbox" id="only-errors-chk"
+          style="width: 30px"> Show errors only</label>
+    </div>
     <div id="question-stats"></div>
 
     <button onclick="location.reload()">Restart</button>

@@ -16,6 +16,8 @@ const progressFill = document.getElementById("progress-bar-fill");
 const problemStatement = document.getElementById("problem-statement");
 const answerInput = document.getElementById("answer");
 
+const showOnlyErrorsChk = document.getElementById("only-errors-chk");
+
 document.getElementById("start-btn").onclick = startQuiz;
 document.getElementById("next-btn").onclick = nextQuestion;
 document.getElementById("quit-btn").onclick = showResults;
@@ -24,6 +26,10 @@ document.getElementById("back-btn").onclick = () => {
     quizScreen.style.display = "none";
     startScreen.style.display = "block";
 };
+
+showOnlyErrorsChk.addEventListener("change", e => {
+  showResults();
+});
 
 // ENTER key submits
 answerInput.addEventListener("keydown", e => {
@@ -86,8 +92,87 @@ questionGens = {
         ans
       ];
     },
-  }
-}
+  },
+  subtraction: {
+    s1: function() {
+      // a and b <= 10
+      let a = rand(1, 9);
+      let b = rand(1, 9);
+      if (b > a) {
+        [a, b] = [b, a];
+      }
+      let ans = a - b;
+      return [
+        `${a} - ${b} = `,
+        ans
+      ];
+    },
+    s2: function() {
+      // a = 10
+      let a = 10;
+      let b = rand(1, 10);
+      let ans = a - b;
+      return [
+        `${a} - ${b} = `,
+        ans
+      ];
+    },
+    s3: function() {
+      // a = 10*k, b < 10
+      let a = rand(1, 9) * 10;
+      let b = rand(1, 10);
+      let ans = a - b;
+      return [
+        `${a} - ${b} = `,
+        ans
+      ];
+    },
+    s4: function() {
+      // large a, small b, diff doesn't cross 10x
+      let a = rand(11, 99);
+      let b = rand(1, a % 10);
+      let ans = a - b;
+      return [
+        `${a} - ${b} = `,
+        ans
+      ];
+    },
+    s5: function() {
+      // large a, small b, diff crosses 10x
+      let a = rand(2, 9);
+      let b = rand(11 - a, 9);
+      a += rand(1, 8) * 10;
+      let ans = a - b;
+      return [
+        `${a} - ${b} = `,
+        ans
+      ];
+    },
+    s6: function() {
+      // large a, large b, diff doesn't cross 10x
+      let a = rand(21, 99);
+      let b = rand(1, a % 10) + 10*rand(1, Math.floor(a/10));
+      let ans = a - b;
+      return [
+        `${a} - ${b} = `,
+        ans
+      ];
+    },
+    s7: function() {
+      // large a, large b, diff crosses 10x
+      // a = 10*m + k
+      let m = rand(2, 9);
+      let k = rand(2, 8);
+      let a = 10*m + k;
+      let b = 10*rand(1, m-1) + rand(k, 9);
+      let ans = a - b;
+      return [
+        `${a} - ${b} = `,
+        ans
+      ];
+    },
+  },
+};
 
 // Start game
 function startQuiz() {
@@ -135,14 +220,14 @@ function generateQuestions(rubric, difficulty, count) {
                 ans = a - b;
                 break;
             case "multiplication":
-                a = rand(3, 4);
+                a = rand(2, 4);
                 b = rand(2, 11);
                 text = `${a} × ${b} =`;
                 ans = a * b;
                 break;
             case "division":
                 ans = rand(1, 10);
-                b = rand(2, 2);
+                b = rand(2, 3);
                 if (Math.random() > 0.5) {
                   let t = ans;
                   ans = b;
@@ -153,7 +238,19 @@ function generateQuestions(rubric, difficulty, count) {
                 text = `${a} ÷ ${b} =`;
                 break;
             case 'addition_marathon':
-              [text, ans] = questionGens['addition']['a' + (Math.floor(i/5) + 1)]();
+              [text, ans] = questionGens['addition']['a' + (Math.floor(i/count*5) + 1)]();
+              break;
+            case 'subtraction_marathon':
+              const questionKeys = Object.keys(questionGens['subtraction']);
+              const questionTypesLen = questionKeys.length;
+              let attempts = 3;
+              while (attempts-- > 0) {
+                [text, ans] = questionGens['subtraction'][
+                    questionKeys[Math.floor(i/count*questionTypesLen)]
+                ]();
+                // Do not repeat the same question in a row.
+                if (list.length > 0 && text != list[list.length-1].question) break;
+              }
               break;
         }
 
@@ -222,14 +319,20 @@ function showResults() {
     bigScore.textContent = `${correct} / ${quizData.length}`;
 
     document.getElementById("time-elapsed").textContent = totalTimeSpent.toFixed(1);
+    document.getElementById("date").textContent = new Date();
 
     const stats = document.getElementById("question-stats");
+    const showOnlyErrors = showOnlyErrorsChk.checked;
     stats.innerHTML = "";
 
     quizData.forEach((q, i) => {
         const div = document.createElement("div");
         let ua = q.userAnswer === "" ? "(blank)" : q.userAnswer;
         const isCorrect = parseFloat(q.userAnswer) == q.correct;
+
+        if (showOnlyErrors && isCorrect) {
+          return;
+        }
 
         div.innerHTML = `
             <p><strong>Q${i+1}:</strong> ${q.question}
