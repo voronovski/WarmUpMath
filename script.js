@@ -119,7 +119,7 @@ questionGens = {
     },
     s3: function() {
       // a = 10*k, b < 10
-      let a = rand(1, 9) * 10;
+      let a = rand(2, 10) * 10;
       let b = rand(1, 10);
       let ans = a - b;
       return [
@@ -139,9 +139,11 @@ questionGens = {
     },
     s5: function() {
       // large a, small b, diff crosses 10x
-      let a = rand(2, 9);
-      let b = rand(11 - a, 9);
-      a += rand(1, 8) * 10;
+      let m = rand(1, 9);
+      let k = rand(1, 8);
+      let a = 10*m + k;
+      let b = rand(k+1, 9);
+
       let ans = a - b;
       return [
         `${a} - ${b} = `,
@@ -150,8 +152,10 @@ questionGens = {
     },
     s6: function() {
       // large a, large b, diff doesn't cross 10x
-      let a = rand(21, 99);
-      let b = rand(1, a % 10) + 10*rand(1, Math.floor(a/10));
+      let m = rand(2, 9);
+      let k = rand(2, 9);
+      let a = 10*m + k;
+      let b = 10*rand(1, m) + rand(1, k);
       let ans = a - b;
       return [
         `${a} - ${b} = `,
@@ -197,6 +201,8 @@ function generateQuestions(rubric, difficulty, count) {
     const max = difficulty === "easy" ? 10 : difficulty === "medium" ? 25 : 50;
 
     const list = [];
+    let retries = 0;
+    const maxRetries = 3;
 
     for (let i = 0; i < count; i++) {
         let a = rand(min, max);
@@ -244,15 +250,21 @@ function generateQuestions(rubric, difficulty, count) {
               const questionKeys = Object.keys(questionGens['subtraction']);
               const questionTypesLen = questionKeys.length;
               let attempts = 3;
-              while (attempts-- > 0) {
-                [text, ans] = questionGens['subtraction'][
-                    questionKeys[Math.floor(i/count*questionTypesLen)]
-                ]();
-                // Do not repeat the same question in a row.
-                if (list.length > 0 && text != list[list.length-1].question) break;
-              }
+              [text, ans] = questionGens['subtraction'][
+                  questionKeys[Math.floor(i/count*questionTypesLen)]
+              ]();
               break;
         }
+
+        // Regen if it's a duplicate question.
+        if (list.length > 0
+            && list[list.length-1].question == text
+            && retries++ < maxRetries) {
+          i--;
+          continue
+        }
+
+        retries = 0;
 
         list.push({
             question: text,
