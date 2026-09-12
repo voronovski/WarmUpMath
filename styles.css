@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -25,6 +29,64 @@ input, select {
     font-size: 16px;
     width: 80%;
     margin-bottom: 15px;
+}
+
+.field {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.field label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.field input[type="number"] {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.field-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.field-row .field {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+.option-btn {
+    flex: 1;
+    padding: 10px 4px;
+    margin-top: 0;
+    font-size: 14px;
+    font-family: inherit;
+    border: 2px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.option-btn:hover {
+    border-color: #aaa;
+}
+
+.option-btn.active {
+    background: #4caf50;
+    border-color: #4caf50;
+    color: #fff;
+    font-weight: bold;
 }
 
 #progress-bar {
@@ -74,6 +136,47 @@ input, select {
     font-family: "Comic Sans MS", "Fredoka One", "Baloo", cursive;
     margin: 0;
     text-shadow: 3px 3px 0 #fff, 6px 6px 0 #f48fb1;
+}
+
+#history-chart-section {
+    margin-top: 25px;
+}
+
+#history-chart {
+    max-width: 100%;
+    height: auto;
+    background: white;
+    border-radius: 8px;
+}
+
+#marathon-chart-section {
+    margin-top: 25px;
+}
+
+#marathon-chart {
+    max-width: 100%;
+    height: auto;
+    background: white;
+    border-radius: 8px;
+}
+
+#score-fraction {
+    font-size: 20px;
+    font-weight: bold;
+    color: #555;
+    margin: 0 0 10px;
+}
+
+#start-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+#results-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
 }
 
 #fireworks-canvas {
