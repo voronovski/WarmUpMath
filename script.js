@@ -204,7 +204,7 @@ function renderHistoryChart() {
   ctx.font = "11px Arial, sans-serif";
   ctx.textAlign = "right";
   [0, 25, 50, 75, 100].forEach(v => {
-    const y = padding.top + plotH - (v / 100) * plotH;
+    const y = padding.top + (v / 100) * plotH;
     ctx.strokeStyle = "#eee";
     ctx.beginPath();
     ctx.moveTo(padding.left, y);
@@ -232,7 +232,7 @@ function renderHistoryChart() {
   ctx.beginPath();
   points.forEach((p, i) => {
     const x = padding.left + i * xStep;
-    const y = padding.top + plotH - (p.errorRate / 100) * plotH;
+    const y = padding.top + (p.errorRate / 100) * plotH;
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
@@ -240,7 +240,7 @@ function renderHistoryChart() {
 
   points.forEach((p, i) => {
     const x = padding.left + i * xStep;
-    const y = padding.top + plotH - (p.errorRate / 100) * plotH;
+    const y = padding.top + (p.errorRate / 100) * plotH;
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
