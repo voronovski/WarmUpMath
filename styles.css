@@ -49,6 +49,16 @@ input, select {
     margin-bottom: 0;
 }
 
+#answer::-webkit-outer-spin-button,
+#answer::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#answer {
+    -moz-appearance: textfield;
+}
+
 .field-row {
     display: flex;
     gap: 15px;
