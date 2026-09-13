@@ -170,6 +170,44 @@ input, select {
     border-radius: 8px;
 }
 
+#attempts-history-section {
+    margin-top: 25px;
+    text-align: left;
+}
+
+#attempts-table-wrap {
+    max-height: 320px;
+    overflow-y: auto;
+    background: white;
+    border-radius: 8px;
+    padding: 4px 10px;
+}
+
+#attempts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+#attempts-table th,
+#attempts-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+#attempts-table th {
+    color: #555;
+    position: sticky;
+    top: 0;
+    background: white;
+}
+
+#attempts-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
 #score-fraction {
     font-size: 20px;
     font-weight: bold;

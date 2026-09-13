@@ -44,6 +44,8 @@ document.getElementById("home-btn").onclick = () => {
   resultsScreen.style.display = "none";
   startScreen.style.display = "block";
   renderHistoryChart();
+  renderMarathonChart();
+  renderAttemptsHistory();
 };
 
 showOnlyErrorsChk.addEventListener("change", e => {
@@ -817,3 +819,61 @@ function startFireworks() {
   spawnFirework();
   update();
 }
+
+// Recent attempts list ----------------------------------------------------
+// Combines both history stores into one chronological feed. A marathon run
+// contributes its 4 per-rubric quizHistory entries plus one overall
+// marathonHistory entry, so a single marathon shows up as 5 rows here -
+// that's intentional, since each leg is graded and worth seeing on its own.
+const RECENT_ATTEMPTS_LIMIT = 20;
+const attemptsTableBody = document.getElementById("attempts-table-body");
+
+function formatAttemptResult(correct, total, grade) {
+  if (grade) return `${grade} (${correct}/${total})`;
+  if (total >= MIN_QUESTIONS_FOR_LETTER_GRADE) {
+    return `${getLetterGrade((correct / total) * 100)} (${correct}/${total})`;
+  }
+  return `${correct}/${total}`;
+}
+
+function renderAttemptsHistory() {
+  const quizAttempts = loadHistory().map(e => ({
+    date: e.date,
+    test: `${capitalize(e.rubric)} (${capitalize(e.difficulty)})`,
+    result: formatAttemptResult(e.correct, e.total, null),
+  }));
+
+  const marathonAttempts = loadMarathonHistory().map(e => ({
+    date: e.date,
+    test: `Marathon (${capitalize(e.difficulty)})`,
+    result: formatAttemptResult(e.correct, e.total, e.grade),
+  }));
+
+  const attempts = quizAttempts
+    .concat(marathonAttempts)
+    .sort((a, b) => b.date - a.date)
+    .slice(0, RECENT_ATTEMPTS_LIMIT);
+
+  attemptsTableBody.innerHTML = "";
+
+  if (attempts.length === 0) {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td colspan="4" style="text-align:center; color:#999;">No attempts yet</td>`;
+    attemptsTableBody.appendChild(row);
+    return;
+  }
+
+  attempts.forEach(a => {
+    const d = new Date(a.date);
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${d.toLocaleDateString()}</td>
+      <td>${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${a.test}</td>
+      <td>${a.result}</td>
+    `;
+    attemptsTableBody.appendChild(row);
+  });
+}
+
+renderAttemptsHistory();
