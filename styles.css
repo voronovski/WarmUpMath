@@ -172,15 +172,17 @@ input, select {
 
 #attempts-history-section {
     margin-top: 25px;
-    text-align: left;
 }
 
 #attempts-table-wrap {
+    max-width: 500px;
     max-height: 320px;
+    margin: 0 auto;
     overflow-y: auto;
     background: white;
     border-radius: 8px;
     padding: 4px 10px;
+    text-align: left;
 }
 
 #attempts-table {
