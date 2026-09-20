@@ -121,12 +121,15 @@ const TAB_PANELS = {
   generate: document.getElementById("generate-tab"),
 };
 
+const attemptsHistorySection = document.getElementById("attempts-history-section");
+
 document.getElementById("mode-tabs").querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
     Object.entries(TAB_PANELS).forEach(([key, panel]) => {
       panel.style.display = key === btn.dataset.tab ? "block" : "none";
     });
+    attemptsHistorySection.style.display = btn.dataset.tab === "generate" ? "none" : "block";
   });
 });
 
@@ -913,8 +916,8 @@ const TAG_DEFS = {
   division: { type: "op", symbol: "÷", label: "Division" },
 };
 
-let genFormula1 = [];
-let genQuestions1 = [];
+let genSets = [{ formula: [], count: 10 }];
+let genQuestions = [];
 
 function buildFormulaParts(formula) {
   const numberTags = [];
@@ -959,7 +962,6 @@ function findFormulaRangeError(formula) {
     if (ops[k] === "division" && hi < 2 * tagDef.min) {
       return `${TAG_DEFS[numberTags[k]].label} can never be large enough to divide by ${tagDef.label} without the result just dividing into itself - swap the order or pick a smaller tag.`;
     }
-
     if (ops[k] === "addition") {
       lo += tagDef.min;
       hi += tagDef.max;
@@ -975,6 +977,37 @@ function findFormulaRangeError(formula) {
     }
   }
   return null;
+}
+
+// Picks a random "number, operation, number" formula, re-rolling until it
+// passes findFormulaRangeError - so the Random button never lands on a
+// formula that's a priori impossible (e.g. "2-digit - 3-digit").
+const NUMBER_TAG_KEYS = Object.keys(TAG_DEFS).filter(k => TAG_DEFS[k].type === "number");
+const OP_TAG_KEYS = Object.keys(TAG_DEFS).filter(k => TAG_DEFS[k].type === "op");
+
+// Random-generated multiplication is kept to the largest pairing still easy
+// to work out by hand: a 1-digit number times a 2-digit number (9×99). This
+// only constrains the Random button - a formula built by hand can multiply
+// whatever tags the user picks.
+const MAX_MULTIPLICATION_PRODUCT = TAG_DEFS.digit1.max * TAG_DEFS.digit2.max;
+
+function isRandomMultiplicationTooLarge(formula) {
+  return formula[1] === "multiplication" &&
+    TAG_DEFS[formula[0]].max * TAG_DEFS[formula[2]].max > MAX_MULTIPLICATION_PRODUCT;
+}
+
+function randomValidFormula() {
+  let formula;
+  let attempts = 0;
+  do {
+    formula = [
+      NUMBER_TAG_KEYS[rand(0, NUMBER_TAG_KEYS.length - 1)],
+      OP_TAG_KEYS[rand(0, OP_TAG_KEYS.length - 1)],
+      NUMBER_TAG_KEYS[rand(0, NUMBER_TAG_KEYS.length - 1)],
+    ];
+    attempts++;
+  } while ((findFormulaRangeError(formula) || isRandomMultiplicationTooLarge(formula)) && attempts < 100);
+  return formula;
 }
 
 // Returns a random divisor of n within [min, max] (excluding `exclude`, so a
@@ -1097,38 +1130,130 @@ function generateFormulaQuestions(formula, count) {
   return list;
 }
 
-const genFormulaEl = document.getElementById("gen-formula-1");
+const genSetsEl = document.getElementById("gen-sets");
+const genAddSetBtn = document.getElementById("gen-add-set-btn");
 
-function renderGenFormula() {
-  if (genFormula1.length === 0) {
-    genFormulaEl.innerHTML = `<span class="gen-formula-empty">Add tags to build a formula…</span>`;
-    return;
-  }
-  genFormulaEl.innerHTML = genFormula1.map((tag, i) => `
-    <span class="gen-chip">${TAG_DEFS[tag].label}<button type="button" class="gen-chip-remove" data-idx="${i}">×</button></span>
-  `).join("");
+function isSetFormulaValid(set) {
+  return isValidFormula(set.formula) && !findFormulaRangeError(set.formula);
 }
 
-document.querySelectorAll("#generate-tab .tag-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    genFormula1.push(btn.dataset.tag);
-    renderGenFormula();
+function updateAddSetButtonState() {
+  genAddSetBtn.disabled = !isSetFormulaValid(genSets[genSets.length - 1]);
+}
+
+function renderGenFormulaChips(setIndex) {
+  const formula = genSets[setIndex].formula;
+  const el = genSetsEl.querySelector(`.gen-formula[data-set="${setIndex}"]`);
+
+  el.innerHTML = formula.length === 0
+    ? `<span class="gen-formula-empty">Add tags to build a formula…</span>`
+    : formula.map((tag, i) => `
+        <span class="gen-chip">${TAG_DEFS[tag].label}<button type="button" class="gen-chip-remove" data-idx="${i}">×</button></span>
+      `).join("");
+}
+
+function renderGenSets() {
+  genSetsEl.innerHTML = genSets.map((set, i) => `
+    <div class="gen-set">
+      <div class="gen-set-header">
+        <span class="gen-set-label">${i + 1}</span>
+        <input type="number" class="gen-count-input" data-set="${i}" min="1" max="50" value="${set.count}" placeholder="Count">
+        <span class="gen-count-label">examples</span>
+        ${genSets.length > 1 ? `<button type="button" class="gen-remove-set-btn" data-set="${i}" title="Remove set">×</button>` : ""}
+      </div>
+
+      <div class="gen-formula" data-set="${i}"></div>
+
+      <div class="field">
+        <label>Numbers</label>
+        <div class="btn-group">
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="digit1">1-digit</button>
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="digit2">2-digit</button>
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="digit3">3-digit</button>
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="digit4">4-digit</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Operations</label>
+        <div class="btn-group">
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="addition">Addition</button>
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="subtraction">Subtraction</button>
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="multiplication">Multiplication</button>
+          <button type="button" class="option-btn tag-btn" data-set="${i}" data-tag="division">Division</button>
+        </div>
+      </div>
+
+      <div class="gen-formula-actions">
+        <button type="button" class="gen-clear-btn" data-set="${i}">Clear</button>
+        <button type="button" class="gen-random-btn" data-set="${i}">Random</button>
+      </div>
+    </div>
+  `).join("");
+
+  genSets.forEach((set, i) => renderGenFormulaChips(i));
+
+  genSetsEl.querySelectorAll(".gen-count-input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      genSets[parseInt(inp.dataset.set)].count = parseInt(inp.value);
+    });
   });
+
+  genSetsEl.querySelectorAll(".tag-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const setIndex = parseInt(btn.dataset.set);
+      genSets[setIndex].formula.push(btn.dataset.tag);
+      renderGenFormulaChips(setIndex);
+      updateAddSetButtonState();
+    });
+  });
+
+  genSetsEl.querySelectorAll(".gen-formula").forEach(el => {
+    el.addEventListener("click", e => {
+      if (e.target.classList.contains("gen-chip-remove")) {
+        const setIndex = parseInt(el.dataset.set);
+        genSets[setIndex].formula.splice(parseInt(e.target.dataset.idx), 1);
+        renderGenFormulaChips(setIndex);
+        updateAddSetButtonState();
+      }
+    });
+  });
+
+  genSetsEl.querySelectorAll(".gen-clear-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const setIndex = parseInt(btn.dataset.set);
+      genSets[setIndex].formula = [];
+      renderGenFormulaChips(setIndex);
+      updateAddSetButtonState();
+    });
+  });
+
+  genSetsEl.querySelectorAll(".gen-random-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const setIndex = parseInt(btn.dataset.set);
+      genSets[setIndex] = { formula: randomValidFormula(), count: rand(3, 20) };
+      renderGenFormulaChips(setIndex);
+      genSetsEl.querySelector(`.gen-count-input[data-set="${setIndex}"]`).value = genSets[setIndex].count;
+      updateAddSetButtonState();
+    });
+  });
+
+  genSetsEl.querySelectorAll(".gen-remove-set-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      genSets.splice(parseInt(btn.dataset.set), 1);
+      renderGenSets();
+    });
+  });
+
+  updateAddSetButtonState();
+}
+
+genAddSetBtn.addEventListener("click", () => {
+  genSets.push({ formula: [], count: 10 });
+  renderGenSets();
 });
 
-genFormulaEl.addEventListener("click", e => {
-  if (e.target.classList.contains("gen-chip-remove")) {
-    genFormula1.splice(parseInt(e.target.dataset.idx), 1);
-    renderGenFormula();
-  }
-});
-
-document.getElementById("gen-clear-btn").addEventListener("click", () => {
-  genFormula1 = [];
-  renderGenFormula();
-});
-
-renderGenFormula();
+renderGenSets();
 
 const genWorksheet = document.getElementById("gen-worksheet");
 const genQuestionsEl = document.getElementById("gen-questions");
@@ -1142,12 +1267,21 @@ function updateGenCheckButtonState() {
 }
 
 function renderGenWorksheet() {
-  genQuestionsEl.innerHTML = genQuestions1.map((q, i) => `
+  let lastSetIndex = null;
+
+  genQuestionsEl.innerHTML = genQuestions.map((q, i) => {
+    let divider = "";
+    if (genSets.length > 1 && q.setIndex !== lastSetIndex) {
+      divider = `<div class="gen-set-divider">Set ${q.setIndex + 1}</div>`;
+      lastSetIndex = q.setIndex;
+    }
+    return `${divider}
     <div class="gen-question">
       <span class="gen-question-text">${q.text}</span>
       <input type="number" inputmode="numeric" class="gen-answer-input" data-index="${i}" autocomplete="off">
-    </div>
-  `).join("");
+      <span class="gen-result-badge"></span>
+    </div>`;
+  }).join("");
 
   genQuestionsEl.querySelectorAll(".gen-answer-input").forEach(inp => {
     inp.addEventListener("input", updateGenCheckButtonState);
@@ -1161,56 +1295,68 @@ function renderGenWorksheet() {
 document.getElementById("gen-generate-btn").addEventListener("click", () => {
   genErrorEl.style.display = "none";
 
-  const count = parseInt(document.getElementById("gen-count-1").value);
-  if (!count || count < 1 || count > 50) {
-    genErrorEl.textContent = "Enter a number of examples between 1 and 50.";
-    genErrorEl.style.display = "block";
-    genWorksheet.style.display = "none";
-    return;
+  for (let i = 0; i < genSets.length; i++) {
+    const set = genSets[i];
+    const label = genSets.length > 1 ? `Set ${i + 1}: ` : "";
+
+    if (!set.count || set.count < 1 || set.count > 50) {
+      genErrorEl.textContent = `${label}Enter a number of examples between 1 and 50.`;
+      genErrorEl.style.display = "block";
+      genWorksheet.style.display = "none";
+      return;
+    }
+
+    if (!isValidFormula(set.formula)) {
+      genErrorEl.textContent = `${label}Build a formula starting and ending with a number tag, alternating with operations (e.g. 3-digit, Subtraction, 2-digit).`;
+      genErrorEl.style.display = "block";
+      genWorksheet.style.display = "none";
+      return;
+    }
+
+    const rangeError = findFormulaRangeError(set.formula);
+    if (rangeError) {
+      genErrorEl.textContent = `${label}${rangeError}`;
+      genErrorEl.style.display = "block";
+      genWorksheet.style.display = "none";
+      return;
+    }
   }
 
-  if (!isValidFormula(genFormula1)) {
-    genErrorEl.textContent = "Build a formula starting and ending with a number tag, alternating with operations (e.g. 3-digit, Subtraction, 2-digit).";
-    genErrorEl.style.display = "block";
-    genWorksheet.style.display = "none";
-    return;
-  }
-
-  const rangeError = findFormulaRangeError(genFormula1);
-  if (rangeError) {
-    genErrorEl.textContent = rangeError;
-    genErrorEl.style.display = "block";
-    genWorksheet.style.display = "none";
-    return;
-  }
-
-  genQuestions1 = generateFormulaQuestions(genFormula1, count);
+  genQuestions = genSets.flatMap((set, setIndex) =>
+    generateFormulaQuestions(set.formula, set.count).map(q => ({ ...q, setIndex }))
+  );
   renderGenWorksheet();
 });
 
+// Plain SVG icons instead of the "✓"/"✕" glyphs, whose stroke weight varies
+// unpredictably across fonts (and the "✕" grew a stray horizontal bar).
+const CHECK_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>';
+const CROSS_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+
 genCheckBtn.addEventListener("click", () => {
-  const inputs = genQuestionsEl.querySelectorAll(".gen-answer-input");
+  const rows = genQuestionsEl.querySelectorAll(".gen-question");
   let correctCount = 0;
 
-  inputs.forEach(inp => {
-    const q = genQuestions1[parseInt(inp.dataset.index)];
+  rows.forEach(row => {
+    const inp = row.querySelector(".gen-answer-input");
+    const textEl = row.querySelector(".gen-question-text");
+    const badge = row.querySelector(".gen-result-badge");
+    const q = genQuestions[parseInt(inp.dataset.index)];
     const isCorrect = parseFloat(inp.value.trim()) === q.result;
 
-    inp.classList.toggle("correct", isCorrect);
-    inp.classList.toggle("wrong", !isCorrect);
+    // Reveal the correct answer in the same font as the question, right
+    // after the "=" - the input itself is left exactly as the child typed
+    // it, same place, same colors.
+    textEl.textContent = `${q.text} ${q.result}`;
     inp.disabled = true;
 
-    if (!isCorrect) {
-      const hint = document.createElement("span");
-      hint.className = "gen-correct-hint";
-      hint.textContent = ` → ${q.result}`;
-      inp.insertAdjacentElement("afterend", hint);
-    } else {
-      correctCount++;
-    }
+    badge.classList.add(isCorrect ? "correct" : "wrong");
+    badge.innerHTML = isCorrect ? CHECK_ICON : CROSS_ICON;
+
+    if (isCorrect) correctCount++;
   });
 
-  genScoreEl.textContent = `${correctCount} / ${inputs.length}`;
+  genScoreEl.textContent = `${correctCount} / ${rows.length}`;
   genScoreEl.style.display = "block";
   genCheckBtn.disabled = true;
 });
