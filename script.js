@@ -114,16 +114,19 @@ initButtonGroup("rubric-group", "rubric");
 initButtonGroup("difficulty-group", "difficulty");
 initButtonGroup("marathon-difficulty-group", "marathon-difficulty");
 
-// Mode tabs (Session / Marathon) ---------------------------------------------
-const sessionTab = document.getElementById("session-tab");
-const marathonTab = document.getElementById("marathon-tab");
+// Mode tabs (Session / Marathon / Generate) ----------------------------------
+const TAB_PANELS = {
+  session: document.getElementById("session-tab"),
+  marathon: document.getElementById("marathon-tab"),
+  generate: document.getElementById("generate-tab"),
+};
 
 document.getElementById("mode-tabs").querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
-    const isSession = btn.dataset.tab === "session";
-    sessionTab.style.display = isSession ? "block" : "none";
-    marathonTab.style.display = isSession ? "none" : "block";
+    Object.entries(TAB_PANELS).forEach(([key, panel]) => {
+      panel.style.display = key === btn.dataset.tab ? "block" : "none";
+    });
   });
 });
 
@@ -894,3 +897,320 @@ function renderAttemptsHistory() {
 }
 
 renderAttemptsHistory();
+
+// Generate tab ----------------------------------------------------------------
+// A user-built formula (a sequence of number-size and operation tags,
+// alternating and starting/ending on a number tag) generates a worksheet of
+// examples all shown at once, checked together rather than one at a time.
+const TAG_DEFS = {
+  digit1: { type: "number", min: 2, max: 9, label: "1-digit" },
+  digit2: { type: "number", min: 10, max: 99, label: "2-digit" },
+  digit3: { type: "number", min: 100, max: 999, label: "3-digit" },
+  digit4: { type: "number", min: 1000, max: 9999, label: "4-digit" },
+  addition: { type: "op", symbol: "+", label: "Addition" },
+  subtraction: { type: "op", symbol: "-", label: "Subtraction" },
+  multiplication: { type: "op", symbol: "×", label: "Multiplication" },
+  division: { type: "op", symbol: "÷", label: "Division" },
+};
+
+let genFormula1 = [];
+let genQuestions1 = [];
+
+function buildFormulaParts(formula) {
+  const numberTags = [];
+  const ops = [];
+  formula.forEach(tag => {
+    if (TAG_DEFS[tag].type === "number") numberTags.push(tag);
+    else ops.push(tag);
+  });
+  return { numberTags, ops };
+}
+
+function isValidFormula(formula) {
+  if (formula.length === 0) return false;
+  for (let i = 0; i < formula.length; i++) {
+    const def = TAG_DEFS[formula[i]];
+    if (!def) return false;
+    if (def.type !== (i % 2 === 0 ? "number" : "op")) return false;
+  }
+  return formula.length % 2 === 1;
+}
+
+// For subtraction/division, the running total up to this point must be able
+// to reach at least the next tag's minimum - otherwise every example would
+// need a negative subtraction or a fractional division no matter what gets
+// generated. Tracks the best/worst-case running total through the formula
+// to catch a formula like "2-digit - 3-digit" before generation ever starts.
+function findFormulaRangeError(formula) {
+  const { numberTags, ops } = buildFormulaParts(formula);
+  let lo = TAG_DEFS[numberTags[0]].min;
+  let hi = TAG_DEFS[numberTags[0]].max;
+
+  for (let k = 0; k < ops.length; k++) {
+    const tag = numberTags[k + 1];
+    const tagDef = TAG_DEFS[tag];
+
+    if (ops[k] === "subtraction" && hi < tagDef.min) {
+      return `${TAG_DEFS[numberTags[k]].label} can never be large enough to subtract ${tagDef.label} - swap the order or pick a smaller tag.`;
+    }
+    // A divisor equal to the dividend (quotient of 1) is excluded, so the
+    // running total must be able to reach at least twice the divisor's
+    // minimum - otherwise the only "exact" divisor left is itself.
+    if (ops[k] === "division" && hi < 2 * tagDef.min) {
+      return `${TAG_DEFS[numberTags[k]].label} can never be large enough to divide by ${tagDef.label} without the result just dividing into itself - swap the order or pick a smaller tag.`;
+    }
+
+    if (ops[k] === "addition") {
+      lo += tagDef.min;
+      hi += tagDef.max;
+    } else if (ops[k] === "subtraction") {
+      lo = Math.max(0, lo - tagDef.max);
+      hi = Math.max(0, hi - tagDef.min);
+    } else if (ops[k] === "multiplication") {
+      lo *= tagDef.min;
+      hi *= tagDef.max;
+    } else if (ops[k] === "division") {
+      lo = Math.floor(lo / tagDef.max);
+      hi = Math.floor(hi / tagDef.min);
+    }
+  }
+  return null;
+}
+
+// Returns a random divisor of n within [min, max] (excluding `exclude`, so a
+// number is never shown dividing itself into a trivial quotient of 1), or
+// null if none exists.
+function findDivisorOf(n, min, max, exclude) {
+  const divisors = [];
+  for (let d = min; d <= max; d++) {
+    if (d !== exclude && n % d === 0) divisors.push(d);
+  }
+  return divisors.length ? divisors[rand(0, divisors.length - 1)] : null;
+}
+
+// Generates one example. Division works the simple way: the dividend (the
+// running result so far) is already fixed, so the divisor is just re-rolled
+// within its own digit range until the division comes out to a whole number
+// and isn't the dividend itself (which would be a trivial "divides itself").
+// Searched exhaustively rather than by blind random guesses, since a wide
+// digit range (e.g. 4-digit ÷ 4-digit) can have very few valid divisors.
+function generateOneExample(formula) {
+  const { numberTags, ops } = buildFormulaParts(formula);
+  const values = numberTags.map(tag => rand(TAG_DEFS[tag].min, TAG_DEFS[tag].max));
+  let result = values[0];
+
+  for (let k = 0; k < ops.length; k++) {
+    const op = ops[k];
+    const def = TAG_DEFS[numberTags[k + 1]];
+
+    if (op === "addition") {
+      result += values[k + 1];
+    } else if (op === "subtraction") {
+      // Generate the subtrahend already bounded by the running total,
+      // instead of drawing it freely and fixing it up after the fact.
+      const hi = Math.min(def.max, result);
+      const lo = Math.min(def.min, hi);
+      values[k + 1] = rand(lo, hi);
+      result -= values[k + 1];
+    } else if (op === "multiplication") {
+      result *= values[k + 1];
+    } else if (op === "division") {
+      const min = Math.max(2, def.min);
+      const max = def.max;
+      const divisor = findDivisorOf(result, min, max, result);
+
+      if (divisor !== null) {
+        values[k + 1] = divisor;
+        result = result / divisor;
+      }
+      // If nothing in the tag's own range divides evenly, leave `result`
+      // as-is - it will no longer match a from-scratch recomputation, so
+      // isExampleValid rejects this example and the caller retries with a
+      // fresh dividend, rather than quietly using an undersized divisor.
+    }
+  }
+
+  return { values, ops, result };
+}
+
+// The retroactive adjustments generateOneExample makes for division (e.g.
+// rewriting an earlier operand so a later division comes out exact) can
+// occasionally reintroduce a 0/1 operand or a number dividing into itself,
+// especially with small digit-1 ranges. Rather than special-casing every
+// arithmetic branch further, just reject and retry.
+function isExampleValid(values, ops) {
+  if (values.some(v => v === 0 || v === 1)) return false;
+  let running = values[0];
+  for (let k = 0; k < ops.length; k++) {
+    if (ops[k] === "division") {
+      if (values[k + 1] === running) return false;
+      running = running / values[k + 1];
+      if (!Number.isInteger(running)) return false;
+    } else if (ops[k] === "addition") {
+      running += values[k + 1];
+    } else if (ops[k] === "subtraction") {
+      running -= values[k + 1];
+    } else if (ops[k] === "multiplication") {
+      running *= values[k + 1];
+    }
+    if (running < 0) return false;
+  }
+  return true;
+}
+
+function generateValidExample(formula) {
+  let example = generateOneExample(formula);
+  let attempts = 0;
+  while (!isExampleValid(example.values, example.ops) && attempts < 300) {
+    example = generateOneExample(formula);
+    attempts++;
+  }
+  return example;
+}
+
+function formatEquationText(values, ops) {
+  let text = String(values[0]);
+  ops.forEach((op, i) => {
+    text += ` ${TAG_DEFS[op].symbol} ${values[i + 1]}`;
+  });
+  return text + " =";
+}
+
+function generateFormulaQuestions(formula, count) {
+  const list = [];
+  let retries = 0;
+  const maxRetries = 3;
+
+  for (let i = 0; i < count; i++) {
+    const { values, ops, result } = generateValidExample(formula);
+    const text = formatEquationText(values, ops);
+
+    if (list.length > 0 && list[list.length - 1].text === text && retries++ < maxRetries) {
+      i--;
+      continue;
+    }
+    retries = 0;
+
+    list.push({ text, result });
+  }
+
+  return list;
+}
+
+const genFormulaEl = document.getElementById("gen-formula-1");
+
+function renderGenFormula() {
+  if (genFormula1.length === 0) {
+    genFormulaEl.innerHTML = `<span class="gen-formula-empty">Add tags to build a formula…</span>`;
+    return;
+  }
+  genFormulaEl.innerHTML = genFormula1.map((tag, i) => `
+    <span class="gen-chip">${TAG_DEFS[tag].label}<button type="button" class="gen-chip-remove" data-idx="${i}">×</button></span>
+  `).join("");
+}
+
+document.querySelectorAll("#generate-tab .tag-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    genFormula1.push(btn.dataset.tag);
+    renderGenFormula();
+  });
+});
+
+genFormulaEl.addEventListener("click", e => {
+  if (e.target.classList.contains("gen-chip-remove")) {
+    genFormula1.splice(parseInt(e.target.dataset.idx), 1);
+    renderGenFormula();
+  }
+});
+
+document.getElementById("gen-clear-btn").addEventListener("click", () => {
+  genFormula1 = [];
+  renderGenFormula();
+});
+
+renderGenFormula();
+
+const genWorksheet = document.getElementById("gen-worksheet");
+const genQuestionsEl = document.getElementById("gen-questions");
+const genCheckBtn = document.getElementById("gen-check-btn");
+const genScoreEl = document.getElementById("gen-score");
+const genErrorEl = document.getElementById("gen-error");
+
+function updateGenCheckButtonState() {
+  const inputs = genQuestionsEl.querySelectorAll(".gen-answer-input");
+  genCheckBtn.disabled = !Array.from(inputs).every(inp => inp.value.trim() !== "");
+}
+
+function renderGenWorksheet() {
+  genQuestionsEl.innerHTML = genQuestions1.map((q, i) => `
+    <div class="gen-question">
+      <span class="gen-question-text">${q.text}</span>
+      <input type="number" inputmode="numeric" class="gen-answer-input" data-index="${i}" autocomplete="off">
+    </div>
+  `).join("");
+
+  genQuestionsEl.querySelectorAll(".gen-answer-input").forEach(inp => {
+    inp.addEventListener("input", updateGenCheckButtonState);
+  });
+
+  genWorksheet.style.display = "block";
+  genScoreEl.style.display = "none";
+  genCheckBtn.disabled = true;
+}
+
+document.getElementById("gen-generate-btn").addEventListener("click", () => {
+  genErrorEl.style.display = "none";
+
+  const count = parseInt(document.getElementById("gen-count-1").value);
+  if (!count || count < 1 || count > 50) {
+    genErrorEl.textContent = "Enter a number of examples between 1 and 50.";
+    genErrorEl.style.display = "block";
+    genWorksheet.style.display = "none";
+    return;
+  }
+
+  if (!isValidFormula(genFormula1)) {
+    genErrorEl.textContent = "Build a formula starting and ending with a number tag, alternating with operations (e.g. 3-digit, Subtraction, 2-digit).";
+    genErrorEl.style.display = "block";
+    genWorksheet.style.display = "none";
+    return;
+  }
+
+  const rangeError = findFormulaRangeError(genFormula1);
+  if (rangeError) {
+    genErrorEl.textContent = rangeError;
+    genErrorEl.style.display = "block";
+    genWorksheet.style.display = "none";
+    return;
+  }
+
+  genQuestions1 = generateFormulaQuestions(genFormula1, count);
+  renderGenWorksheet();
+});
+
+genCheckBtn.addEventListener("click", () => {
+  const inputs = genQuestionsEl.querySelectorAll(".gen-answer-input");
+  let correctCount = 0;
+
+  inputs.forEach(inp => {
+    const q = genQuestions1[parseInt(inp.dataset.index)];
+    const isCorrect = parseFloat(inp.value.trim()) === q.result;
+
+    inp.classList.toggle("correct", isCorrect);
+    inp.classList.toggle("wrong", !isCorrect);
+    inp.disabled = true;
+
+    if (!isCorrect) {
+      const hint = document.createElement("span");
+      hint.className = "gen-correct-hint";
+      hint.textContent = ` → ${q.result}`;
+      inp.insertAdjacentElement("afterend", hint);
+    } else {
+      correctCount++;
+    }
+  });
+
+  genScoreEl.textContent = `${correctCount} / ${inputs.length}`;
+  genScoreEl.style.display = "block";
+  genCheckBtn.disabled = true;
+});

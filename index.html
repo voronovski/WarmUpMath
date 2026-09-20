@@ -15,6 +15,7 @@
     <div class="tab-bar" id="mode-tabs">
         <button type="button" class="tab-btn active" data-tab="session">Session</button>
         <button type="button" class="tab-btn" data-tab="marathon">Marathon</button>
+        <button type="button" class="tab-btn" data-tab="generate">Generate</button>
     </div>
 
     <div id="session-tab" class="tab-panel">
@@ -78,6 +79,55 @@
         <div id="marathon-chart-section">
             <h3>Marathon Grade History</h3>
             <canvas id="marathon-chart" width="500" height="320"></canvas>
+        </div>
+    </div>
+
+    <div id="generate-tab" class="tab-panel" style="display:none;">
+        <div class="gen-set" id="gen-set-1">
+            <div class="gen-set-header">
+                <span class="gen-set-label">1</span>
+                <input type="number" id="gen-count-1" min="1" max="50" value="10" placeholder="Count">
+            </div>
+
+            <div class="gen-formula" id="gen-formula-1"></div>
+
+            <div class="field">
+                <label>Numbers</label>
+                <div class="btn-group">
+                    <button type="button" class="option-btn tag-btn" data-tag="digit1">1-digit</button>
+                    <button type="button" class="option-btn tag-btn" data-tag="digit2">2-digit</button>
+                    <button type="button" class="option-btn tag-btn" data-tag="digit3">3-digit</button>
+                    <button type="button" class="option-btn tag-btn" data-tag="digit4">4-digit</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Operations</label>
+                <div class="btn-group">
+                    <button type="button" class="option-btn tag-btn" data-tag="addition">Addition</button>
+                    <button type="button" class="option-btn tag-btn" data-tag="subtraction">Subtraction</button>
+                    <button type="button" class="option-btn tag-btn" data-tag="multiplication">Multiplication</button>
+                    <button type="button" class="option-btn tag-btn" data-tag="division">Division</button>
+                </div>
+            </div>
+
+            <div id="gen-formula-actions">
+                <button type="button" id="gen-clear-btn">Clear</button>
+            </div>
+        </div>
+
+        <div id="gen-actions">
+            <button type="button" id="gen-generate-btn">Generate</button>
+        </div>
+
+        <div id="gen-error" style="display:none;"></div>
+
+        <div id="gen-worksheet" style="display:none;">
+            <div id="gen-questions"></div>
+            <div id="gen-check-actions">
+                <button type="button" id="gen-check-btn" disabled>Check</button>
+            </div>
+            <div id="gen-score" style="display:none;"></div>
         </div>
     </div>
 
