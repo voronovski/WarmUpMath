@@ -58,6 +58,7 @@ function saveSettings() {
   const settings = {
     rubric: document.getElementById("rubric").value,
     difficulty: document.getElementById("difficulty").value,
+    marathonDifficulty: document.getElementById("marathon-difficulty").value,
     numQuestions: document.getElementById("num-questions").value,
     timeLimit: document.getElementById("time-limit").value,
   };
@@ -77,6 +78,7 @@ function restoreSettings() {
 
   if (settings.rubric) document.getElementById("rubric").value = settings.rubric;
   if (settings.difficulty) document.getElementById("difficulty").value = settings.difficulty;
+  if (settings.marathonDifficulty) document.getElementById("marathon-difficulty").value = settings.marathonDifficulty;
   if (settings.numQuestions) document.getElementById("num-questions").value = settings.numQuestions;
   if (settings.timeLimit) document.getElementById("time-limit").value = settings.timeLimit;
 }
@@ -110,6 +112,20 @@ function initButtonGroup(groupId, hiddenInputId) {
 
 initButtonGroup("rubric-group", "rubric");
 initButtonGroup("difficulty-group", "difficulty");
+initButtonGroup("marathon-difficulty-group", "marathon-difficulty");
+
+// Mode tabs (Session / Marathon) ---------------------------------------------
+const sessionTab = document.getElementById("session-tab");
+const marathonTab = document.getElementById("marathon-tab");
+
+document.getElementById("mode-tabs").querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+    const isSession = btn.dataset.tab === "session";
+    sessionTab.style.display = isSession ? "block" : "none";
+    marathonTab.style.display = isSession ? "none" : "block";
+  });
+});
 
 // History chart -------------------------------------------------------------
 // Each completed (or quit) session is recorded as an error RATE (%), not a
@@ -135,6 +151,7 @@ const MARATHON_CHART_SESSION_LIMIT = 100;
 const historyChartCanvas = document.getElementById("history-chart");
 const rubricInput = document.getElementById("rubric");
 const difficultySelect = document.getElementById("difficulty");
+const marathonDifficultySelect = document.getElementById("marathon-difficulty");
 
 function loadHistory() {
   try {
@@ -297,7 +314,7 @@ function renderMarathonChart() {
   const plotW = w - padding.left - padding.right;
   const plotH = h - padding.top - padding.bottom;
 
-  const difficulty = difficultySelect.value;
+  const difficulty = marathonDifficultySelect.value;
   const points = loadMarathonHistory()
     .filter(e => e.difficulty === difficulty)
     .slice(-MARATHON_CHART_SESSION_LIMIT);
@@ -365,7 +382,7 @@ function renderMarathonChart() {
   ctx.fillText("Marathon #", padding.left + plotW / 2, h - 6);
 }
 
-difficultySelect.addEventListener("change", renderMarathonChart);
+marathonDifficultySelect.addEventListener("change", renderMarathonChart);
 
 renderMarathonChart();
 
@@ -403,7 +420,7 @@ function startQuiz() {
 // Marathon: chains one 15-question session of each core rubric back-to-back,
 // using whatever difficulty is currently selected on the form.
 function startMarathon() {
-  const difficulty = document.getElementById("difficulty").value;
+  const difficulty = document.getElementById("marathon-difficulty").value;
   perQuestionTime = parseInt(document.getElementById("time-limit").value);
 
   currentDifficulty = difficulty;

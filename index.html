@@ -12,51 +12,73 @@
 <div id="start-screen">
     <h1>Math Games</h1>
 
-    <div class="field">
-        <label>Rubric</label>
-        <input type="hidden" id="rubric" value="addition">
-        <div class="btn-group" id="rubric-group">
-            <button type="button" class="option-btn" data-value="addition">Addition</button>
-            <button type="button" class="option-btn" data-value="subtraction">Subtraction</button>
-            <button type="button" class="option-btn" data-value="multiplication">Multiplication</button>
-            <button type="button" class="option-btn" data-value="division">Division</button>
-        </div>
+    <div class="tab-bar" id="mode-tabs">
+        <button type="button" class="tab-btn active" data-tab="session">Session</button>
+        <button type="button" class="tab-btn" data-tab="marathon">Marathon</button>
     </div>
 
-    <div class="field">
-        <label>Difficulty</label>
-        <input type="hidden" id="difficulty" value="easy">
-        <div class="btn-group" id="difficulty-group">
-            <button type="button" class="option-btn" data-value="easy">Easy</button>
-            <button type="button" class="option-btn" data-value="medium">Medium</button>
-            <button type="button" class="option-btn" data-value="hard">Hard</button>
-        </div>
-    </div>
-
-    <div class="field-row">
+    <div id="session-tab" class="tab-panel">
         <div class="field">
-            <label>Number of Questions</label>
-            <input type="number" id="num-questions" value="10" min="1" max="50">
+            <label>Rubric</label>
+            <input type="hidden" id="rubric" value="addition">
+            <div class="btn-group" id="rubric-group">
+                <button type="button" class="option-btn" data-value="addition">Addition</button>
+                <button type="button" class="option-btn" data-value="subtraction">Subtraction</button>
+                <button type="button" class="option-btn" data-value="multiplication">Multiplication</button>
+                <button type="button" class="option-btn" data-value="division">Division</button>
+            </div>
         </div>
+
         <div class="field">
-            <label>Time (sec.)</label>
-            <input type="number" id="time-limit" value="15" min="5" max="120">
+            <label>Difficulty</label>
+            <input type="hidden" id="difficulty" value="easy">
+            <div class="btn-group" id="difficulty-group">
+                <button type="button" class="option-btn" data-value="easy">Easy</button>
+                <button type="button" class="option-btn" data-value="medium">Medium</button>
+                <button type="button" class="option-btn" data-value="hard">Hard</button>
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label>Number of Questions</label>
+                <input type="number" id="num-questions" value="10" min="1" max="50">
+            </div>
+            <div class="field">
+                <label>Time (sec.)</label>
+                <input type="number" id="time-limit" value="15" min="5" max="120">
+            </div>
+        </div>
+
+        <div id="start-actions">
+            <button id="start-btn">Start</button>
+        </div>
+
+        <div id="history-chart-section">
+            <h3>Error Rate History</h3>
+            <canvas id="history-chart" width="500" height="250"></canvas>
         </div>
     </div>
 
-    <div id="start-actions">
-        <button id="start-btn">Start</button>
-        <button id="marathon-btn">Marathon</button>
-    </div>
+    <div id="marathon-tab" class="tab-panel" style="display:none;">
+        <div class="field">
+            <label>Difficulty</label>
+            <input type="hidden" id="marathon-difficulty" value="easy">
+            <div class="btn-group" id="marathon-difficulty-group">
+                <button type="button" class="option-btn" data-value="easy">Easy</button>
+                <button type="button" class="option-btn" data-value="medium">Medium</button>
+                <button type="button" class="option-btn" data-value="hard">Hard</button>
+            </div>
+        </div>
 
-    <div id="history-chart-section">
-        <h3>Error Rate History</h3>
-        <canvas id="history-chart" width="500" height="250"></canvas>
-    </div>
+        <div id="marathon-actions">
+            <button id="marathon-btn">Start</button>
+        </div>
 
-    <div id="marathon-chart-section">
-        <h3>Marathon Grade History</h3>
-        <canvas id="marathon-chart" width="500" height="320"></canvas>
+        <div id="marathon-chart-section">
+            <h3>Marathon Grade History</h3>
+            <canvas id="marathon-chart" width="500" height="320"></canvas>
+        </div>
     </div>
 
     <div id="attempts-history-section">
