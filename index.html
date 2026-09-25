@@ -3,14 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Games</title>
+    <title>Warm Up Math</title>
+    <meta name="description" content="Practice addition, subtraction, multiplication and division with timed quizzes and marathons.">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Warm Up Math">
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <!-- Start Screen -------------------------------------------------------------->
 <div id="start-screen">
-    <h1>Math Games</h1>
+    <h1>Warm Up Math</h1>
 
     <div class="tab-bar" id="mode-tabs">
         <button type="button" class="tab-btn active" data-tab="session">Session</button>
@@ -173,6 +183,15 @@
 </div>
 
 <script src="script.js"></script>
+<script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js").catch((err) => {
+                console.error("Service worker registration failed:", err);
+            });
+        });
+    }
+</script>
 
 </body>
 </html>
