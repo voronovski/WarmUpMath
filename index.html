@@ -7,7 +7,9 @@
     <meta name="description" content="Practice addition, subtraction, multiplication and division with timed quizzes and marathons.">
 
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4CAF50">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#4CAF50" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)">
     <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -121,6 +123,52 @@
             </table>
         </div>
     </div>
+
+    <div id="info-tab" class="tab-panel" style="display:none;">
+        <div class="info-block">
+            <h3>About Warm Up Math</h3>
+            <p>A lightweight, installable app for practicing elementary school arithmetic — addition, subtraction, multiplication and division. No accounts, no ads; it works offline once installed, and all progress stays on your device.</p>
+        </div>
+
+        <div class="info-block">
+            <h3>Modes</h3>
+            <dl class="info-modes">
+                <dt>Session</dt>
+                <dd>A timed quiz. Choose a rubric, a difficulty, how many questions, and how many seconds you get per question, then hit Start. Answer each problem before the timer runs out — at the end you get a score, the total time, and a per-question breakdown.</dd>
+
+                <dt>Marathon</dt>
+                <dd>Choose a difficulty and hit Start — the app runs a 15-question set for each rubric in turn (Addition, Multiplication, Subtraction, Division, 60 questions total), each timed using the same seconds-per-question limit set on the Session tab. It doesn't stop on a wrong answer — you go through all 60, then get a letter grade for each rubric plus an overall grade for the run.</dd>
+
+                <dt>Generate</dt>
+                <dd>Build your own worksheet. Add one or more formula sets (e.g. <code>a + b</code>, <code>a * b - c</code>) with how many questions you want from each, tap Generate to build the worksheet, fill in the answers, then Check to see what you got right.</dd>
+            </dl>
+        </div>
+
+        <div class="info-block">
+            <h3>Progress tracking</h3>
+            <p>The Session tab shows an error-rate history chart and the Marathon tab shows a grade history chart; the home screen also lists your recent attempts. Everything is stored locally in the browser (<code>localStorage</code>) — nothing is sent anywhere.</p>
+        </div>
+
+        <div class="info-block">
+            <h3>Privacy &amp; offline use</h3>
+            <ul class="info-install-list">
+                <li>No personal data is collected.</li>
+                <li>All your history (error rates, marathon grades, recent attempts) is stored only on your device, in the browser's local storage.</li>
+                <li>Once installed, the app works fully offline — no internet connection needed after the first visit.</li>
+            </ul>
+        </div>
+
+        <div class="info-block">
+            <h3>Install as an app</h3>
+            <p>The app can be installed to a phone's home screen or a desktop and used offline after that.</p>
+            <ul class="info-install-list">
+                <li><strong>Android / Chrome:</strong> the browser shows an "Install" prompt automatically, or use the menu → "Install app".</li>
+                <li><strong>iOS / Safari:</strong> tap Share → "Add to Home Screen".</li>
+                <li><strong>Desktop (Chrome/Edge):</strong> click the install icon in the address bar.</li>
+            </ul>
+            <p class="info-note">Note: installation and offline caching require the site to be served over HTTPS (or localhost) — it won't work over plain HTTP.</p>
+        </div>
+    </div>
 </div>
 
 <!-- Quiz Screen --------------------------------------------------------------->
@@ -205,7 +253,31 @@
         </span>
         <span class="tab-label">Generate</span>
     </button>
+    <button type="button" class="tab-btn" data-tab="info">
+        <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+                <line x1="12" y1="11" x2="12" y2="16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></line>
+                <circle cx="12" cy="8" r="1" fill="currentColor"></circle>
+            </svg>
+        </span>
+        <span class="tab-label">Info</span>
+    </button>
 </nav>
+
+<!-- "Add to Home Screen" install prompt ----------------------------------->
+<div id="install-banner" class="install-banner" style="display:none;" role="dialog" aria-label="Install app">
+    <button type="button" id="install-banner-close" class="install-banner-close" aria-label="Close">&times;</button>
+    <div class="install-banner-top">
+        <img src="icons/icon-192.png" alt="" class="install-banner-icon">
+        <div class="install-banner-copy">
+            <p class="install-banner-title" id="install-banner-title">Add to Home Screen</p>
+            <p class="install-banner-text" id="install-banner-text">Add Warm Up Math to your Home Screen to play offline and keep your progress saved. To do this:</p>
+        </div>
+    </div>
+    <div class="install-banner-steps" id="install-banner-steps"></div>
+    <button type="button" id="install-banner-action" class="btn-primary install-banner-action" style="display:none;">Install</button>
+</div>
 
 <script src="script.js"></script>
 <script>

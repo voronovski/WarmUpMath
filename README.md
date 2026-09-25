@@ -5,10 +5,16 @@ A lightweight, installable web app for practicing elementary school arithmetic. 
 ## Features
 
 - **Session mode** — a timed quiz with a chosen rubric (addition, subtraction, multiplication, division) and difficulty, with a configurable number of questions and time per question.
-- **Marathon mode** — an endless run at a chosen difficulty that ends on the first mistake.
+- **Marathon mode** — runs a 15-question set for each rubric in turn (Addition, Multiplication, Subtraction, Division — 60 questions total) at a chosen difficulty, timed per question using the same time limit as Session mode, then grades each rubric and the run overall.
 - **Generate mode** — build a custom worksheet from your own formula sets (e.g. `a + b`, `a * b - c`) and check the answers.
 - **Progress tracking** — error-rate history, marathon grade history, and a table of recent attempts, all stored locally in the browser (`localStorage`).
 - **Results screen** — per-question breakdown, score, elapsed time, and a small fireworks celebration on a good result.
+
+## Privacy & offline use
+
+- No personal data is collected.
+- All history (error rates, marathon grades, recent attempts) is stored only on the device, in the browser's `localStorage`.
+- Once installed, the app works fully offline — no internet connection is needed after the first visit.
 
 ## Progressive Web App (PWA)
 

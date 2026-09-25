@@ -122,9 +122,11 @@ const TAB_PANELS = {
   session: document.getElementById("session-tab"),
   marathon: document.getElementById("marathon-tab"),
   generate: document.getElementById("generate-tab"),
+  info: document.getElementById("info-tab"),
 };
 
 const attemptsHistorySection = document.getElementById("attempts-history-section");
+const TABS_WITHOUT_ATTEMPTS_HISTORY = ["generate", "info"];
 
 document.getElementById("mode-tabs").querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -132,7 +134,7 @@ document.getElementById("mode-tabs").querySelectorAll(".tab-btn").forEach(btn =>
     Object.entries(TAB_PANELS).forEach(([key, panel]) => {
       panel.style.display = key === btn.dataset.tab ? "block" : "none";
     });
-    attemptsHistorySection.style.display = btn.dataset.tab === "generate" ? "none" : "block";
+    attemptsHistorySection.style.display = TABS_WITHOUT_ATTEMPTS_HISTORY.includes(btn.dataset.tab) ? "none" : "block";
   });
 });
 
@@ -203,6 +205,20 @@ function recordHistoryEntry(rubric, difficulty, total, correct) {
   }
 }
 
+// Charts are drawn on <canvas>, so they don't pick up CSS dark-mode colors
+// automatically — pull matching colors based on the current color scheme.
+const darkModeQuery = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+
+function getChartColors() {
+  const dark = !!(darkModeQuery && darkModeQuery.matches);
+  return {
+    axis: dark ? "#555" : "#ccc",
+    grid: dark ? "#2c2f33" : "#eee",
+    textMuted: dark ? "#aeb2b6" : "#666",
+    textFaint: dark ? "#888c90" : "#999",
+  };
+}
+
 function renderHistoryChart() {
   const ctx = historyChartCanvas.getContext("2d");
   const w = historyChartCanvas.width;
@@ -219,8 +235,10 @@ function renderHistoryChart() {
     .filter(e => e.rubric === rubric && e.difficulty === difficulty)
     .slice(-TOP_CHART_SESSION_LIMIT);
 
+  const colors = getChartColors();
+
   // Axes
-  ctx.strokeStyle = "#ccc";
+  ctx.strokeStyle = colors.axis;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(padding.left, padding.top);
@@ -233,18 +251,18 @@ function renderHistoryChart() {
   ctx.textAlign = "right";
   [0, 25, 50, 75, 100].forEach(v => {
     const y = padding.top + (v / 100) * plotH;
-    ctx.strokeStyle = "#eee";
+    ctx.strokeStyle = colors.grid;
     ctx.beginPath();
     ctx.moveTo(padding.left, y);
     ctx.lineTo(padding.left + plotW, y);
     ctx.stroke();
 
-    ctx.fillStyle = "#666";
+    ctx.fillStyle = colors.textMuted;
     ctx.fillText(v + "%", padding.left - 6, y + 3);
   });
 
   if (points.length === 0) {
-    ctx.fillStyle = "#999";
+    ctx.fillStyle = colors.textFaint;
     ctx.textAlign = "center";
     ctx.font = "13px Arial, sans-serif";
     ctx.fillText("No completed sessions yet for this rubric/difficulty", w / 2, h / 2);
@@ -274,7 +292,7 @@ function renderHistoryChart() {
     ctx.fill();
   });
 
-  ctx.fillStyle = "#666";
+  ctx.fillStyle = colors.textMuted;
   ctx.textAlign = "center";
   ctx.font = "11px Arial, sans-serif";
   ctx.fillText("Session #", padding.left + plotW / 2, h - 6);
@@ -328,8 +346,10 @@ function renderMarathonChart() {
     .filter(e => e.difficulty === difficulty)
     .slice(-MARATHON_CHART_SESSION_LIMIT);
 
+  const colors = getChartColors();
+
   // Axes
-  ctx.strokeStyle = "#ccc";
+  ctx.strokeStyle = colors.axis;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(padding.left, padding.top);
@@ -343,18 +363,18 @@ function renderMarathonChart() {
   const maxGradeIdx = GRADE_ORDER.length - 1;
   GRADE_ORDER.forEach((grade, idx) => {
     const y = padding.top + plotH - (idx / maxGradeIdx) * plotH;
-    ctx.strokeStyle = "#eee";
+    ctx.strokeStyle = colors.grid;
     ctx.beginPath();
     ctx.moveTo(padding.left, y);
     ctx.lineTo(padding.left + plotW, y);
     ctx.stroke();
 
-    ctx.fillStyle = "#666";
+    ctx.fillStyle = colors.textMuted;
     ctx.fillText(grade, padding.left - 6, y + 3);
   });
 
   if (points.length === 0) {
-    ctx.fillStyle = "#999";
+    ctx.fillStyle = colors.textFaint;
     ctx.textAlign = "center";
     ctx.font = "13px Arial, sans-serif";
     ctx.fillText("No completed marathons yet for this difficulty", w / 2, h / 2);
@@ -385,7 +405,7 @@ function renderMarathonChart() {
     ctx.fill();
   });
 
-  ctx.fillStyle = "#666";
+  ctx.fillStyle = colors.textMuted;
   ctx.textAlign = "center";
   ctx.font = "11px Arial, sans-serif";
   ctx.fillText("Marathon #", padding.left + plotW / 2, h - 6);
@@ -394,6 +414,19 @@ function renderMarathonChart() {
 marathonDifficultySelect.addEventListener("change", renderMarathonChart);
 
 renderMarathonChart();
+
+// Redraw charts if the OS/browser color scheme changes while the app is open.
+if (darkModeQuery) {
+  const onColorSchemeChange = () => {
+    renderHistoryChart();
+    renderMarathonChart();
+  };
+  if (darkModeQuery.addEventListener) {
+    darkModeQuery.addEventListener("change", onColorSchemeChange);
+  } else if (darkModeQuery.addListener) {
+    darkModeQuery.addListener(onColorSchemeChange);
+  }
+}
 
 // ENTER key submits
 answerInput.addEventListener("keydown", e => {
@@ -1164,7 +1197,7 @@ function renderGenSets() {
         <span class="gen-set-label">${i + 1}</span>
         <input type="number" class="gen-count-input" data-set="${i}" min="1" max="50" value="${set.count}" placeholder="Count">
         <span class="gen-count-label">examples</span>
-        ${genSets.length > 1 ? `<button type="button" class="gen-remove-set-btn" data-set="${i}" title="Remove set">×</button>` : ""}
+        ${genSets.length > 1 ? `<button type="button" class="gen-remove-set-btn" data-set="${i}" title="Remove set"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>` : ""}
       </div>
 
       <div class="gen-formula" data-set="${i}"></div>
@@ -1365,3 +1398,104 @@ genCheckBtn.addEventListener("click", () => {
   genScoreEl.style.display = "block";
   genCheckBtn.disabled = true;
 });
+
+// "Add to Home Screen" install prompt ----------------------------------
+// iOS has no beforeinstallprompt event, so it always gets the manual
+// Share -> Add to Home Screen instructions. Android gets the real native
+// prompt when Chrome offers one, and falls back to manual menu
+// instructions if it doesn't show up (e.g. Firefox for Android, or a
+// browser that already dismissed it once).
+(() => {
+  const banner = document.getElementById("install-banner");
+  if (!banner) return;
+
+  const DISMISS_KEY = "installBannerDismissedAt";
+  const DISMISS_DAYS = 30;
+
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+    || window.navigator.standalone === true;
+  if (isStandalone) return;
+
+  const dismissedAt = parseInt(localStorage.getItem(DISMISS_KEY) || "0", 10);
+  if (dismissedAt && Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) return;
+
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua)
+    || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  if (!isIOS && !isAndroid) return;
+
+  const titleEl = document.getElementById("install-banner-title");
+  const textEl = document.getElementById("install-banner-text");
+  const stepsEl = document.getElementById("install-banner-steps");
+  const actionBtn = document.getElementById("install-banner-action");
+  const closeBtn = document.getElementById("install-banner-close");
+
+  const SHARE_ICON = '<svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3v12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 7l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  const PLUS_SQUARE_ICON = '<svg viewBox="0 0 24 24" role="img" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.7"></rect><path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>';
+  const MENU_ICON = '<svg viewBox="0 0 24 24" role="img" focusable="false"><circle cx="12" cy="5" r="1.6" fill="currentColor"></circle><circle cx="12" cy="12" r="1.6" fill="currentColor"></circle><circle cx="12" cy="19" r="1.6" fill="currentColor"></circle></svg>';
+
+  function dismiss() {
+    banner.style.display = "none";
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+  }
+
+  closeBtn.addEventListener("click", dismiss);
+
+  function showSteps(steps) {
+    stepsEl.style.display = "flex";
+    stepsEl.innerHTML = steps.map(([icon, label]) => `
+      <div class="install-banner-step">
+        <span class="install-banner-step-icon" aria-hidden="true">${icon}</span>
+        <span>${label}</span>
+      </div>
+    `).join("");
+  }
+
+  if (isIOS) {
+    titleEl.textContent = "Add to Home Screen";
+    textEl.textContent = "Add Warm Up Math to your Home Screen to play offline and keep your progress saved. To do this:";
+    showSteps([[SHARE_ICON, "Share"], [PLUS_SQUARE_ICON, "Add to Home Screen"]]);
+    banner.style.display = "block";
+    return;
+  }
+
+  // Android
+  let deferredInstallPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+
+    titleEl.textContent = "Install the app";
+    textEl.textContent = "Install Warm Up Math on your device to play offline and keep your progress saved.";
+    stepsEl.style.display = "none";
+    actionBtn.style.display = "block";
+    banner.style.display = "block";
+  });
+
+  actionBtn.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    actionBtn.disabled = true;
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    if (outcome === "accepted") {
+      dismiss();
+    } else {
+      actionBtn.disabled = false;
+    }
+  });
+
+  window.addEventListener("appinstalled", dismiss);
+
+  // Chrome fires beforeinstallprompt asynchronously; if it hasn't shown up
+  // shortly, fall back to manual "menu -> Install app" instructions.
+  setTimeout(() => {
+    if (deferredInstallPrompt || banner.style.display === "block") return;
+    titleEl.textContent = "Install the app";
+    textEl.textContent = "Install Warm Up Math on your device to play offline and keep your progress saved. To do this:";
+    showSteps([[MENU_ICON, "Open the browser menu"], [PLUS_SQUARE_ICON, "Install app"]]);
+    banner.style.display = "block";
+  }, 2500);
+})();
