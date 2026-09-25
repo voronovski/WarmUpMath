@@ -17,6 +17,10 @@ body {
     padding: 20px;
 }
 
+#start-screen {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+
 button {
     padding: 12px 25px;
     margin-top: 15px;
@@ -70,27 +74,42 @@ input, select {
     margin-bottom: 0;
 }
 
-.tab-bar {
-    display: flex;
+.dock-nav {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    max-width: 468px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #ddd;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    -webkit-backdrop-filter: saturate(1.8) blur(20px);
+    backdrop-filter: saturate(1.8) blur(20px);
+    box-shadow: 0 12px 30px rgba(16, 22, 30, 0.18);
+    z-index: 5;
 }
 
 .tab-btn {
-    flex: 1;
-    padding: 10px 4px;
     margin-top: 0;
-    font-size: 16px;
     font-family: inherit;
-    font-weight: bold;
+    font-size: 13px;
+    font-weight: 600;
     border: none;
-    background: none;
+    background: transparent;
     color: #888;
     cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transform: translateY(2px);
-    transition: color 0.15s ease, border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 4px;
+    border-radius: 18px;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 .tab-btn:hover {
@@ -98,8 +117,15 @@ input, select {
 }
 
 .tab-btn.active {
+    background: rgba(76, 175, 80, 0.15);
     color: #4caf50;
-    border-color: #4caf50;
+}
+
+.tab-icon {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
 }
 
 .btn-group {

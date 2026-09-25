@@ -1,4 +1,4 @@
-const CACHE_NAME = "math-games-cache-v2";
+const CACHE_NAME = "math-games-cache-v3";
 const PRECACHE_URLS = [
   "./",
   "./index.html",
@@ -14,7 +14,9 @@ const PRECACHE_URLS = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then((cache) => Promise.all(
+        PRECACHE_URLS.map((url) => fetch(url, { cache: "reload" }).then((response) => cache.put(url, response)))
+      ))
       .then(() => self.skipWaiting())
   );
 });

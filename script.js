@@ -17,6 +17,7 @@ const MARATHON_QUESTIONS_PER_LEG = 15;
 const startScreen = document.getElementById("start-screen");
 const quizScreen = document.getElementById("quiz-screen");
 const resultsScreen = document.getElementById("results-screen");
+const dockNav = document.getElementById("mode-tabs");
 
 const rubricName = document.getElementById("rubric-name");
 const questionNumber = document.getElementById("question-number");
@@ -33,6 +34,7 @@ document.getElementById("back-btn").onclick = () => {
   clearInterval(timer);
   quizScreen.style.display = "none";
   startScreen.style.display = "block";
+  dockNav.style.display = "grid";
 };
 document.getElementById("marathon-btn").onclick = startMarathon;
 document.getElementById("restart-btn").onclick = () => {
@@ -43,6 +45,7 @@ document.getElementById("home-btn").onclick = () => {
   stopFireworks();
   resultsScreen.style.display = "none";
   startScreen.style.display = "block";
+  dockNav.style.display = "grid";
   renderHistoryChart();
   renderMarathonChart();
   renderAttemptsHistory();
@@ -417,6 +420,7 @@ function startQuiz() {
 
   startScreen.style.display = "none";
   quizScreen.style.display = "block";
+  dockNav.style.display = "none";
 
   rubricName.textContent = capitalize(rubric);
 
@@ -449,6 +453,7 @@ function startMarathon() {
 
   startScreen.style.display = "none";
   quizScreen.style.display = "block";
+  dockNav.style.display = "none";
 
   rubricName.textContent = "Marathon";
 

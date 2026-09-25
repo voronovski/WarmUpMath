@@ -22,12 +22,6 @@
 <div id="start-screen">
     <h1>Warm Up Math</h1>
 
-    <div class="tab-bar" id="mode-tabs">
-        <button type="button" class="tab-btn active" data-tab="session">Session</button>
-        <button type="button" class="tab-btn" data-tab="marathon">Marathon</button>
-        <button type="button" class="tab-btn" data-tab="generate">Generate</button>
-    </div>
-
     <div id="session-tab" class="tab-panel">
         <div class="field">
             <label>Rubric</label>
@@ -181,6 +175,37 @@
         <button id="restart-btn">Restart</button>
     </div>
 </div>
+
+<!-- Bottom dock navigation ----------------------------------------------------->
+<nav class="dock-nav" id="mode-tabs" aria-label="Mode">
+    <button type="button" class="tab-btn active" data-tab="session">
+        <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                <circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+                <path d="M12 9v4l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M10 2h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+            </svg>
+        </span>
+        <span class="tab-label">Session</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="marathon">
+        <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></polygon>
+            </svg>
+        </span>
+        <span class="tab-label">Marathon</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="generate">
+        <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                <path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </span>
+        <span class="tab-label">Generate</span>
+    </button>
+</nav>
 
 <script src="script.js"></script>
 <script>
